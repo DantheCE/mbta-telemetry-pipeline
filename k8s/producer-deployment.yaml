@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemetry-producer
+  labels:
+    app: telemetry-producer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemetry-producer
+  template:
+    metadata:
+      labels:
+        app: telemetry-producer
+    spec:
+      serviceAccountName: workload-identity-sa
+      containers:
+      - name: producer
+        image: telemetry-producer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BROKER
+          value: "kafka-service:9092"
+        - name: MBTA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: mbta-secret
+              key: api-key
