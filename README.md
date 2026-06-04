@@ -38,15 +38,15 @@ graph LR
 Building scalable data pipelines requires balancing latency, complexity, and cost. Here are the major trade-offs made during development:
 
 ### 1. Serverless Cloud Run vs. "Always-On" Containers
-*   **Trade-off:** We chose ephemeral Cloud Run Jobs triggered via Cloud Scheduler instead of an always-running Kubernetes cluster or ECS service.
+*   **Trade-off:** I chose ephemeral Cloud Run Jobs triggered via Cloud Scheduler instead of an always-running Kubernetes cluster or ECS service.
 *   **Why:** While an always-on container provides sub-millisecond latency for processing events, it incurs 24/7 compute costs. Transit data is highly valuable but a 1-minute processing delay is acceptable. Batching the ingestion and consumption into cron-triggered serverless jobs reduced our cloud bill from ~$50/month to literally **$0/month**.
 
 ### 2. `confluent-kafka` (C-Backed) vs. `kafka-python` (Pure Python)
-*   **Trade-off:** We opted for `confluent-kafka` which requires compiling C-extensions (`librdkafka`) instead of the much easier-to-install `kafka-python` pure Python library.
+*   **Trade-off:** I opted for `confluent-kafka` which requires compiling C-extensions (`librdkafka`) instead of the much easier-to-install `kafka-python` pure Python library.
 *   **Why:** Pure Python Kafka libraries historically struggle with Server Name Indication (SNI) routing in modern, multi-tenant cloud environments like Redpanda Serverless, leading to silent connection drops and 60-second timeouts. Using the industry-standard C-library drastically improved network stability and serialization speed. 
 
 ### 3. Redpanda vs. Apache Kafka
-*   **Trade-off:** We chose Redpanda over standard Apache Kafka or AWS MSK.
+*   **Trade-off:** I chose Redpanda over standard Apache Kafka or AWS MSK.
 *   **Why:** Redpanda is a C++ Kafka-compatible broker that eliminates the need for JVMs and Zookeeper/Kraft. The Serverless Cloud tier provided the exact Kafka API we needed without the massive operational overhead or minimum node-count requirements of traditional Kafka clusters.
 
 ### 4. Bulk PostgreSQL Inserts vs. Streaming Upserts
