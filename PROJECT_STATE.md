@@ -31,7 +31,7 @@ pyKfAfProject/
 ## Architecture Stack
 * **Compute / Workers**: Google Cloud Run Jobs (Serverless) + Google Cloud Scheduler (Cron triggers)
 * **Message Broker**: Redpanda Cloud Serverless (Kafka-compatible)
-* **Database**: Supabase / Neon (Serverless PostgreSQL)
+* **Database**: Supabase (Serverless PostgreSQL)
 * **Orchestration / ETL**: GitHub Actions (Replaced Apache Airflow)
 * **Data Serialization**: Protocol Buffers (Protobuf)
 

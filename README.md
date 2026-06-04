@@ -11,7 +11,7 @@ The system fetches live, GTFS-Realtime vehicle position data from the Massachuse
 *   **Languages:** Python 3.10+
 *   **Compute:** Google Cloud Run Jobs (Serverless) + Google Cloud Scheduler
 *   **Message Broker:** Redpanda Cloud Serverless
-*   **Database:** Supabase / Neon (Serverless PostgreSQL)
+*   **Database:** Supabase (Serverless PostgreSQL)
 *   **Orchestration / ETL:** GitHub Actions
 *   **Data Serialization:** Protocol Buffers (Protobuf)
 *   **Containerization:** Docker (Multi-stage builds)
