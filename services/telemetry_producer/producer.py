@@ -23,6 +23,7 @@ def run_producer():
         'sasl.mechanisms': 'SCRAM-SHA-256',
         'sasl.username': KAFKA_USERNAME,
         'sasl.password': KAFKA_PASSWORD,
+        'enable.idempotence': False,
     })
     
     print(f"Starting producer connected to {KAFKA_BROKER}...")
