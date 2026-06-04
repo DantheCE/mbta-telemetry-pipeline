@@ -23,7 +23,8 @@ def run_producer():
         sasl_mechanism="SCRAM-SHA-256",
         sasl_plain_username=KAFKA_USERNAME,
         sasl_plain_password=KAFKA_PASSWORD,
-        )
+        api_version=(3, 3, 2)
+    )
     print(f"Starting producer connected to {KAFKA_BROKER}...")
     try:
         data = fetch_transit_data(MBTA_URL, API_KEY)

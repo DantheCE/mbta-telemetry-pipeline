@@ -57,7 +57,8 @@ def run_consumer():
         security_protocol="SASL_SSL",
         sasl_mechanism="SCRAM-SHA-256",
         sasl_plain_username=KAFKA_USERNAME,
-        sasl_plain_password=KAFKA_PASSWORD
+        sasl_plain_password=KAFKA_PASSWORD,
+        api_version=(3, 3, 2)
     )
     
     print(f"Starting consumer connected to {KAFKA_BROKER}...")
