@@ -1,0 +1,26 @@
+name: Daily Transit Aggregation
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Runs at 02:00 UTC daily
+  workflow_dispatch: # Allows you to manually trigger it from the UI
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: pip install psycopg2-binary
+        
+      - name: Run Aggregation Script
+        env:
+          DB_DSN: ${{ secrets.DB_DSN }}
+        run: python services/jobs/daily_transit_aggregation.py

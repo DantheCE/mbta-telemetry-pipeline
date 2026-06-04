@@ -1,5 +1,6 @@
 # Custom project files to ignore
 PROJECT_GUIDE.md
+DEPLOYMENT.md
 
 # Virtual Environments
 venv/
