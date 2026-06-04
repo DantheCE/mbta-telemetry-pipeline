@@ -1,8 +1,9 @@
 import os
 import psycopg2
 from psycopg2.extras import execute_values
-from kafka import KafkaConsumer
+from confluent_kafka import Consumer
 import sys
+import time
 
 import gtfs_realtime_pb2
 
@@ -49,55 +50,76 @@ def run_consumer():
     conn = psycopg2.connect(DB_DSN)
     init_db(conn)
     
-    consumer = KafkaConsumer(
-        KAFKA_TOPIC,
-        bootstrap_servers=KAFKA_BROKER,
-        group_id="transit_consumer_group",
-        auto_offset_reset='earliest',
-        security_protocol="SASL_SSL",
-        sasl_mechanism="SCRAM-SHA-256",
-        sasl_plain_username=KAFKA_USERNAME,
-        sasl_plain_password=KAFKA_PASSWORD,
-        api_version=(3, 3, 2)
-    )
+    consumer = Consumer({
+        'bootstrap.servers': KAFKA_BROKER,
+        'group.id': 'transit_consumer_group',
+        'auto.offset.reset': 'earliest',
+        'security.protocol': 'SASL_SSL',
+        'sasl.mechanisms': 'SCRAM-SHA-256',
+        'sasl.username': KAFKA_USERNAME,
+        'sasl.password': KAFKA_PASSWORD,
+        'enable.auto.commit': False
+    })
     
-    print(f"Starting consumer connected to {KAFKA_BROKER}...")
+    consumer.subscribe([KAFKA_TOPIC])
+    print(f"Starting consumer connected to {KAFKA_BROKER} on topic {KAFKA_TOPIC}...")
     
-    # Poll for messages, waiting up to 10 seconds. If no messages, it returns empty.
-    messages_dict = consumer.poll(timeout_ms=10000)
-    
-    if not messages_dict:
-        print("No new messages found in the topic. Exiting gracefully.")
-        return
-        
     total_inserted = 0
-    for tp, messages in messages_dict.items():
-        for message in messages:
-            try:
-                records = parse_vehicle_positions(message.value)
-                if not records:
-                    continue
-                    
-                insert_query = """
-                    INSERT INTO vehicle_positions (entity_id, trip_id, latitude, longitude, timestamp, vehicle_id)
-                    VALUES %s
-                    ON CONFLICT (entity_id, timestamp) DO NOTHING
-                """
-                values = [
-                    (r["entity_id"], r["trip_id"], r["latitude"], r["longitude"], r["timestamp"], r["vehicle_id"])
-                    for r in records
-                ]
+    start_time = time.time()
+    
+    try:
+        empty_polls = 0
+        while True:
+            # Enforce an absolute max runtime of 4 minutes so Cloud Run doesn't hang forever
+            if time.time() - start_time > 240:
+                print("Max execution time reached. Exiting.")
+                break
                 
-                with conn.cursor() as cur:
-                    execute_values(cur, insert_query, values)
-                conn.commit()
+            # Poll waits up to 2 seconds for a message
+            msg = consumer.poll(timeout=2.0)
+            
+            if msg is None:
+                empty_polls += 1
+                if empty_polls >= 3:
+                    # 6 seconds of absolutely no messages -> queue is empty
+                    break
+                continue
                 
-                total_inserted += len(records)
-            except Exception as e:
-                print(f"Error consuming message: {e}")
+            empty_polls = 0
+            
+            if msg.error():
+                print(f"Consumer error: {msg.error()}")
+                continue
                 
-    print(f"Batch processing complete. Inserted {total_inserted} records into Postgres.")
-
+            records = parse_vehicle_positions(msg.value())
+            if not records:
+                continue
+                
+            insert_query = """
+                INSERT INTO vehicle_positions (entity_id, trip_id, latitude, longitude, timestamp, vehicle_id)
+                VALUES %s
+                ON CONFLICT (entity_id, timestamp) DO NOTHING
+            """
+            values = [
+                (r["entity_id"], r["trip_id"], r["latitude"], r["longitude"], r["timestamp"], r["vehicle_id"])
+                for r in records
+            ]
+            
+            with conn.cursor() as cur:
+                execute_values(cur, insert_query, values)
+            conn.commit()
+            
+            total_inserted += len(records)
+            
+        # Commit the Kafka offsets only after successful DB insertion
+        consumer.commit(asynchronous=False)
+        print(f"Batch processing complete. Inserted {total_inserted} records into Postgres.")
+    
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+    finally:
+        consumer.close()
+        conn.close()
 
 if __name__ == "__main__":
     run_consumer()
