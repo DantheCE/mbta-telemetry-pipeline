@@ -23,5 +23,15 @@ class TestDSNParser(unittest.TestCase):
         get_db_connection("host=localhost user=usr password=pass dbname=db")
         mock_connect.assert_called_with("host=localhost user=usr password=pass dbname=db")
 
+    @patch('jobs.daily_transit_aggregation.psycopg2.connect')
+    def test_parsing_quoted_and_jdbc(self, mock_connect):
+        # GitHub secrets are often wrapped in quotes
+        get_db_connection('"postgresql://usr:pass@localhost:5432/db"')
+        mock_connect.assert_called_with(dbname='db', user='usr', password='pass', host='localhost', port='5432')
+        
+        # jdbc wrapper
+        get_db_connection("jdbc:postgresql://usr:pass@localhost:5432/db")
+        mock_connect.assert_called_with(dbname='db', user='usr', password='pass', host='localhost', port='5432')
+
 if __name__ == '__main__':
     unittest.main()

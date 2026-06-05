@@ -13,6 +13,13 @@ def get_db_connection(dsn: str):
     if not dsn:
         raise ValueError("DB_DSN is empty or not provided")
         
+    # Strip whitespace and literal quotes which often happen during copy/paste to GitHub Secrets
+    dsn = dsn.strip().strip('\'"').strip()
+    
+    # Sometimes platforms provide jdbc prefixes
+    if dsn.startswith("jdbc:"):
+        dsn = dsn[5:]
+        
     if dsn.startswith("postgres://") or dsn.startswith("postgresql://"):
         scheme, rest = dsn.split("://", 1)
         if "/" in rest:
