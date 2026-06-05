@@ -54,7 +54,7 @@ function App() {
             Ingestion Rate (5m)
           </div>
           <div className="metric-value">
-            {metrics.ingestion_rate_5m.toLocaleString()} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '8px'}}>recs/5m</span>
+            {metrics.ingestion_rate_5m.toLocaleString()} <span style={{fontSize: '1rem', color: 'var(--text-muted)', marginLeft: '8px', fontWeight: '500', alignSelf: 'flex-end', marginBottom: '4px'}}>recs/5m</span>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ function App() {
             Pipeline Latency
           </div>
           <div className="metric-value">
-            {metrics.average_latency_seconds} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '8px'}}>sec</span>
+            {metrics.average_latency_seconds} <span style={{fontSize: '1rem', color: 'var(--text-muted)', marginLeft: '8px', fontWeight: '500', alignSelf: 'flex-end', marginBottom: '4px'}}>sec</span>
           </div>
         </div>
 
