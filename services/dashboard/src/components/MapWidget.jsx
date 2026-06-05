@@ -1,106 +1,58 @@
-import React, { useRef, useEffect } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
+// Fix Leaflet's default icon paths issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom Bus Icon matching our previous premium aesthetic
+const createBusIcon = () => {
+  return L.divIcon({
+    className: 'custom-bus-icon',
+    html: `<div style="width: 12px; height: 12px; background-color: var(--accent); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px var(--accent); transition: transform 0.2s;"></div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+    popupAnchor: [0, -10]
+  });
+};
+
+const busIcon = createBusIcon();
 
 const MapWidget = ({ vehicles }) => {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-  const markersRef = useRef({});
-
-  useEffect(() => {
-    if (map.current) return;
-    
-    if (!mapboxgl.accessToken) {
-        console.warn("Mapbox token missing! Set VITE_MAPBOX_TOKEN.");
-    }
-
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11', // Premium dark mode style
-      center: [-71.0589, 42.3601], // Boston coordinates
-      zoom: 11.5,
-      pitch: 45, // 3D perspective
-      bearing: -17.6,
-    });
-
-    map.current.on('load', () => {
-      map.current.addLayer({
-        'id': '3d-buildings',
-        'source': 'composite',
-        'source-layer': 'building',
-        'filter': ['==', 'extrude', 'true'],
-        'type': 'fill-extrusion',
-        'minzoom': 15,
-        'paint': {
-          'fill-extrusion-color': '#aaa',
-          'fill-extrusion-height': [
-            'interpolate', ['linear'], ['zoom'],
-            15, 0,
-            15.05, ['get', 'height']
-          ],
-          'fill-extrusion-base': [
-            'interpolate', ['linear'], ['zoom'],
-            15, 0,
-            15.05, ['get', 'min_height']
-          ],
-          'fill-extrusion-opacity': 0.6
-        }
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!map.current) return;
-
-    const currentEntityIds = new Set();
-
-    vehicles.forEach((vehicle) => {
-      currentEntityIds.add(vehicle.entity_id);
-
-      if (markersRef.current[vehicle.entity_id]) {
-        markersRef.current[vehicle.entity_id].setLngLat([vehicle.longitude, vehicle.latitude]);
-      } else {
-        const el = document.createElement('div');
-        el.style.width = '12px';
-        el.style.height = '12px';
-        el.style.backgroundColor = 'var(--accent)';
-        el.style.borderRadius = '50%';
-        el.style.border = '2px solid white';
-        el.style.boxShadow = '0 0 10px var(--accent)';
-        el.style.transition = 'transform 0.2s';
-
-        const popup = new mapboxgl.Popup({ offset: 15 })
-            .setHTML(`<strong>Trip:</strong> ${vehicle.trip_id}<br/><strong>Bus:</strong> ${vehicle.vehicle_id}`);
-
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([vehicle.longitude, vehicle.latitude])
-          .setPopup(popup)
-          .addTo(map.current);
-
-        markersRef.current[vehicle.entity_id] = marker;
-      }
-    });
-
-    Object.keys(markersRef.current).forEach(entityId => {
-        if (!currentEntityIds.has(entityId)) {
-            markersRef.current[entityId].remove();
-            delete markersRef.current[entityId];
-        }
-    });
-
-  }, [vehicles]);
-
   return (
-      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-          {!mapboxgl.accessToken && (
-              <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 100, background: 'rgba(220, 38, 38, 0.9)', padding: '12px', borderRadius: '8px', color: 'white', fontWeight: 600 }}>
-                  Please set VITE_MAPBOX_TOKEN in .env to render the map!
-              </div>
-          )}
-          <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
-      </div>
+    <div style={{ width: '100%', height: '100%', zIndex: 1 }}>
+      <MapContainer 
+        center={[42.3601, -71.0589]} 
+        zoom={12} 
+        style={{ width: '100%', height: '100%', background: '#0f172a' }}
+        zoomControl={true}
+      >
+        {/* CartoDB Dark Matter (Free, no API key needed, extremely premium dark look) */}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
+        
+        {vehicles.map(vehicle => (
+          <Marker 
+            key={vehicle.entity_id} 
+            position={[vehicle.latitude, vehicle.longitude]}
+            icon={busIcon}
+          >
+            <Popup>
+              <strong>Trip:</strong> {vehicle.trip_id}<br/>
+              <strong>Bus:</strong> {vehicle.vehicle_id}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 };
 
