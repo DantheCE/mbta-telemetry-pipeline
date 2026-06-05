@@ -42,7 +42,7 @@ We have expanded the pipeline beyond an ingestion engine by building out the pre
 
 1. **FastAPI Backend (`services/api`)**: A lightweight containerized Python API that securely queries Supabase and calculates real-time ingestion metrics, latency, and active vehicle counts.
 2. **Metrics Dashboard (`services/metrics_dashboard`)**: A sleek, dark-mode terminal-inspired (xAI aesthetic) React application. It polls the FastAPI backend to visualize the overall health, latency, and ingestion rate of the data pipeline.
-3. **Map Dashboard (`services/map_dashboard`)**: A secondary React application currently in development, dedicated specifically to rendering the spatial transit data via interactive mapping components.
+3. **Data Particle Flow Visualizer (`services/flow_dashboard`)**: A cinematic, Matrix-inspired HTML5 `<canvas>` application. It translates the real-time backend ingestion rate into an abstract particle animation, physically demonstrating the data flow from the MBTA API, through Kafka, and into the Database.
 4. **Local Orchestration (`docker-compose.yml`)**: We introduced Docker Compose to easily spin up the API and Kafka Consumer locally without fighting OS-level Python dependencies, perfectly mirroring the isolated Cloud Run architecture.
 
 ---

@@ -1,0 +1,115 @@
+:root {
+  font-family: 'Inter', 'Roboto Mono', monospace;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  user-select: none;
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.header {
+  padding: 24px 32px;
+  border-bottom: 1px solid #1a1a1a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.title-section h1 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 0.875rem;
+  font-family: 'Roboto Mono', monospace;
+  margin: 0;
+}
+
+.metrics-row {
+  display: flex;
+  gap: 24px;
+}
+
+.metric-pill {
+  padding: 8px 16px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #0a0a0a;
+}
+
+.metric-label {
+  color: #666;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.metric-value {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.125rem;
+  color: #00ff41; /* Matrix Green */
+}
+
+.canvas-container {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #666;
+}
+.status-dot.live {
+  background-color: #00ff41;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+}
+.status-dot.degraded {
+  background-color: #ff9900;
+  box-shadow: 0 0 8px rgba(255, 153, 0, 0.5);
+}
+.status-dot.offline {
+  background-color: #ff3333;
+  box-shadow: 0 0 8px rgba(255, 51, 51, 0.5);
+}
