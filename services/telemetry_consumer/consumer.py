@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 import psycopg2
 from psycopg2.extras import execute_values
 from confluent_kafka import Consumer
@@ -30,6 +31,43 @@ DB_DSN = os.getenv("DB_DSN", "postgresql://admin:password@localhost:5432/transit
 KAFKA_USERNAME = os.getenv("KAFKA_USERNAME")
 KAFKA_PASSWORD = os.getenv("KAFKA_PASSWORD")
 
+def get_db_connection(dsn: str):
+    """
+    Safely parse DSN to handle special characters (like '@') in the password
+    that break standard URI parsers.
+    """
+    if not dsn:
+        raise ValueError("DB_DSN is empty or not provided")
+        
+    if dsn.startswith("postgres://") or dsn.startswith("postgresql://"):
+        scheme, rest = dsn.split("://", 1)
+        if "/" in rest:
+            auth_host, dbname = rest.rsplit("/", 1)
+        else:
+            auth_host, dbname = rest, ""
+            
+        if "@" in auth_host:
+            auth, host_port = auth_host.rsplit("@", 1)
+        else:
+            auth, host_port = "", auth_host
+            
+        user_pass = auth.split(":", 1)
+        user = user_pass[0] if len(user_pass) > 0 else ""
+        password = user_pass[1] if len(user_pass) > 1 else ""
+        
+        host_port_split = host_port.split(":", 1)
+        host = host_port_split[0] if len(host_port_split) > 0 else ""
+        port = host_port_split[1] if len(host_port_split) > 1 else ""
+        
+        return psycopg2.connect(
+            dbname=dbname,
+            user=urllib.parse.unquote(user),
+            password=urllib.parse.unquote(password),
+            host=host,
+            port=port
+        )
+    return psycopg2.connect(dsn)
+
 def init_db(conn):
     with conn.cursor() as cur:
         cur.execute("""
@@ -47,7 +85,7 @@ def init_db(conn):
     conn.commit()
 
 def run_consumer():
-    conn = psycopg2.connect(DB_DSN)
+    conn = get_db_connection(DB_DSN)
     init_db(conn)
     
     consumer = Consumer({

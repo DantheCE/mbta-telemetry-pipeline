@@ -18,7 +18,11 @@ jobs:
           python-version: '3.10'
           
       - name: Install dependencies
-        run: pip install psycopg2-binary
+        run: |
+          pip install psycopg2-binary pytest hypothesis
+          
+      - name: Run Gate Tests
+        run: python -m pytest services/jobs/tests/test_dsn_parser.py
         
       - name: Run Aggregation Script
         env:
