@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Bus, Clock, Database } from 'lucide-react';
+import { Activity, Bus, Clock, Database, Server } from 'lucide-react';
 import './index.css';
 
 function App() {
@@ -42,8 +42,8 @@ function App() {
         <Activity className="icon" size={24} />
         <h1>System Impact Metrics</h1>
         <div className="status-badge">
-          <span className="live-indicator" style={{ backgroundColor: error || metrics.consumer_status === 'Offline' ? '#ff3333' : loading ? '#eab308' : metrics.consumer_status === 'Lagging' ? '#f97316' : '#ffffff' }}></span> 
-          {loading ? "Connecting..." : error ? "Offline" : metrics.consumer_status}
+          <span className="live-indicator" style={{ backgroundColor: error || metrics.consumer_status === 'Offline' ? '#ff3333' : loading ? '#eab308' : metrics.consumer_status === 'Lagging' ? '#f97316' : '#10b981' }}></span> 
+          {loading ? "Connecting..." : error || metrics.consumer_status === 'Offline' ? "Offline" : metrics.consumer_status === 'Lagging' ? "Degraded" : "System Live"}
         </div>
       </header>
 
@@ -75,6 +75,16 @@ function App() {
           </div>
           <div className="metric-value">
             {metrics.total_records.toLocaleString()}
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-title">
+            <Server size={16} />
+            Consumer Status
+          </div>
+          <div className="metric-value">
+            {metrics.consumer_status}
           </div>
         </div>
 
