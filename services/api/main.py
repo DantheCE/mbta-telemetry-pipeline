@@ -50,3 +50,50 @@ def get_latest_vehicles():
         return {"data": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/metrics")
+def get_metrics():
+    """
+    Returns aggregate metrics and health telemetry for the dashboard.
+    """
+    try:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            # Total processed records
+            cur.execute("SELECT COUNT(*) FROM vehicle_positions;")
+            total_records = cur.fetchone()[0]
+            
+            # Active vehicles in the last 24 hours (86400 seconds)
+            cur.execute("SELECT COUNT(DISTINCT vehicle_id) FROM vehicle_positions WHERE timestamp > (EXTRACT(EPOCH FROM NOW()) - 86400);")
+            active_vehicles_24h = cur.fetchone()[0]
+            
+            # Last ingestion time
+            cur.execute("SELECT MAX(created_at) FROM vehicle_positions;")
+            last_updated = cur.fetchone()[0]
+
+            # Ingestion rate (last 5 minutes)
+            cur.execute("SELECT COUNT(*) FROM vehicle_positions WHERE created_at > NOW() - INTERVAL '5 minutes';")
+            ingestion_rate_5m = cur.fetchone()[0]
+
+            # Average pipeline latency (last 5 minutes)
+            cur.execute("SELECT AVG(EXTRACT(EPOCH FROM created_at) - timestamp) FROM vehicle_positions WHERE created_at > NOW() - INTERVAL '5 minutes';")
+            avg_latency = cur.fetchone()[0]
+            
+            # Consumer status
+            cur.execute("SELECT (NOW() - MAX(created_at)) < INTERVAL '5 minutes' FROM vehicle_positions;")
+            is_healthy = cur.fetchone()[0]
+            consumer_status = "Healthy" if is_healthy else "Lagging" if last_updated else "Offline"
+            
+        conn.close()
+        return {
+            "data": {
+                "total_records": total_records,
+                "active_vehicles_24h": active_vehicles_24h,
+                "last_updated": last_updated.isoformat() if last_updated else None,
+                "ingestion_rate_5m": ingestion_rate_5m,
+                "average_latency_seconds": round(avg_latency, 2) if avg_latency else 0.0,
+                "consumer_status": consumer_status
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

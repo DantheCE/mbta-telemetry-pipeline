@@ -22,3 +22,5 @@ __pycache__/
 # OS specific
 .DS_Store
 Thumbs.db
+.wsl_venv/
+node_modules/

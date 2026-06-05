@@ -1,6 +1,6 @@
 import React from 'react';
 import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import { Map } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -20,7 +20,8 @@ const MapWidget = ({ vehicles }) => {
   const data = vehicles.map(v => ({
     position: [v.longitude, v.latitude],
     trip_id: v.trip_id,
-    vehicle_id: v.vehicle_id
+    vehicle_id: v.vehicle_id,
+    label: v.trip_id ? `Trip: ${v.trip_id}` : `Bus: ${v.vehicle_id}`
   }));
 
   const layers = [
@@ -28,7 +29,7 @@ const MapWidget = ({ vehicles }) => {
       id: 'neon-scatter-layer',
       data,
       radiusScale: 20,
-      radiusMinPixels: 5,
+      radiusMinPixels: 6,
       radiusMaxPixels: 20,
       getPosition: d => d.position,
       getFillColor: [16, 185, 129, 210], // Emerald Green glow
@@ -40,6 +41,21 @@ const MapWidget = ({ vehicles }) => {
       highlightColor: [255, 255, 255, 255],
       transitions: {
         getPosition: 600, // Buttery smooth glide between polling updates
+      }
+    }),
+    new TextLayer({
+      id: 'text-layer',
+      data,
+      pickable: false,
+      getPosition: d => d.position,
+      getText: d => d.label,
+      getSize: 12,
+      getColor: [255, 255, 255, 200],
+      getPixelOffset: [0, -15],
+      fontFamily: 'Inter, sans-serif',
+      fontWeight: 'bold',
+      transitions: {
+        getPosition: 600,
       }
     })
   ];

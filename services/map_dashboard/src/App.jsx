@@ -46,7 +46,7 @@ function App() {
         </div>
 
         <div className="stat-card">
-          <div className="stat-title">Active Vehicles</div>
+          <div className="stat-title">Active Vehicles (Live)</div>
           <div className="stat-value">
             <Bus className="icon" size={24} />
             {vehicles.length}

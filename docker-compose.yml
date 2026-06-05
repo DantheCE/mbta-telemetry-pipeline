@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./services/api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  consumer:
+    build:
+      context: ./services/telemetry_consumer
+    env_file:
+      - .env
+    restart: unless-stopped

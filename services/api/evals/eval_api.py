@@ -26,4 +26,21 @@ def test_eval_get_latest_vehicles():
 if __name__ == "__main__":
     print("Running API Eval...")
     test_eval_get_latest_vehicles()
+    test_eval_metrics()
     print("API Eval passed!")
+
+def test_eval_metrics():
+    with patch("main.get_db_connection") as mock_conn:
+        mock_cursor = mock_conn.return_value.cursor.return_value.__enter__.return_value
+        mock_cursor.fetchone.side_effect = [(500,), (15,), ("2023-01-01T00:00:00",)]
+        
+        response = client.get("/api/v1/metrics")
+        assert response.status_code == 200
+        data = response.json()["data"]
+        
+        assert "total_records" in data
+        assert "active_vehicles_24h" in data
+        assert "last_updated" in data
+        assert isinstance(data["total_records"], int)
+        assert isinstance(data["active_vehicles_24h"], int)
+        assert isinstance(data["last_updated"], str)
